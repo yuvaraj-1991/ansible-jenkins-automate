@@ -1,0 +1,6 @@
+---
+- name: "Deploy Jenkins"
+  hosts: ec2
+  become: true
+  roles:
+    - jenkins-installation
