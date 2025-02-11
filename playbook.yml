@@ -1,0 +1,91 @@
+---
+
+- name: This is a playbook with multiple tasks for EC2 server
+  hosts: ec2
+  become: true
+  vars:
+    mypath: "/home/ubuntu"
+
+  tasks:
+    - name: Gathering facts from server
+      setup:
+    
+    - name: Debug
+      debug:
+        msg: "Hello this is a devops class {{ mypath }}"
+          
+    - name: Installing apache2 curl  package
+      apt:
+        name: "{{ item }}"
+        update_cache: yes
+        state: present
+      loop: 
+        - apache2
+        - curl          
+      tags:
+        - install
+        
+    - name: Checking ssh & apache2 service
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - ssh
+        - apache2  
+      tags:
+        - mytask  
+
+    - name: Copy the test file
+      copy:        
+        src: "/home/yuvaraj/ansible-practice/{{ item.src }}"
+        dest: "{{ mypath }}/{{ item.dest }}"
+      loop:
+        - { src: "test1", dest: "testx" }
+        - { src: "test2", dest: "test22" }
+        - { src: "test3", dest: "test33"}
+      when:
+        item.src == "test2"
+      tags:
+        - copytest
+    
+    - name: Check if the file exists
+      stat:
+        path: /home/ubuntu/test22
+      register: filestatus
+
+    - name: Debug filestatus
+      debug:
+        msg: "{{ filestatus }}"
+
+    - name: Create a devops group
+      group:
+        name: devops
+        state: present 
+      when:
+        filestatus.stat.exists 
+            
+    - name: Create a devops user
+      user:
+        name: devops
+        create_home: yes
+        shell: /bin/bash
+        groups: devops
+    
+    - name: File permission
+      file:
+        path: /home/ubuntu/test2
+        owner: devops
+        group: devops
+        mode: '0644'    
+    
+    - name: Commands 
+      shell:
+        cmd: ls -l > test3
+    
+    - name: GIT clone
+      git:
+        repo: https://github.com/yuvaraj-1991/scripts.git
+        dest: /home/ubuntu/checkout
+        clone: yes    
+        

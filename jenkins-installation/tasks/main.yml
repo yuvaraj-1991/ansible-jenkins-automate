@@ -1,0 +1,29 @@
+---
+# tasks file for jenkins-installation
+- name: "Check the OS details"
+  debug:
+    msg: "OS: {{ ansible_distribution }} {{ ansible_distribution_version }} ({{ ansible_distribution_release }})"
+
+- name: "Server update and upgrade"
+  apt:
+    update_cache: yes
+    upgrade: yes  # Optional, if you intend to upgrade packages
+
+- name: "Install Java"
+  include_tasks: install-java.yml
+
+- name: "Install Jenkins"
+  include_tasks: install-jenkins.yml
+
+- name: "Configure Jenkins"
+  include_tasks: configure-jenkins.yml
+    
+- name: "Get Jenkins Administrator Password"
+  command: cat /var/lib/jenkins/secrets/initialAdminPassword
+  register: jenkins_admin_password
+
+- name: Show the Jenkins Admin Password
+  debug:
+    msg: "Jenkins Admin Password: {{ jenkins_admin_password.stdout }}"
+
+        
